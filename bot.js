@@ -1,10 +1,18 @@
 // bot.js
 import { Client, GatewayIntentBits } from "discord.js";
 import express from "express";
+import cors from "cors";
 
-const client = new Client({ intents: [GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.Guilds] });
+// --- Discord Bot Setup ---
+const client = new Client({ 
+  intents: [
+    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.MessageContent, 
+    GatewayIntentBits.Guilds
+  ] 
+});
 
-let pronouns = {}; // store by user ID
+let pronouns = {}; // store pronouns by user ID
 
 client.on("messageCreate", msg => {
   if (msg.content.startsWith("!pronouns")) {
@@ -14,15 +22,23 @@ client.on("messageCreate", msg => {
   }
 });
 
-// tiny API server
-const app = express();
-app.get("/pronouns/:id", (req, res) => {
-  res.json({ pronouns: pronouns[req.params.id] || "Not set" });
-});
-app.listen(3000, () => console.log("API running on port 3000"));
-
-// login
+// Login the bot
+if (!process.env.DISCORD_TOKEN) {
+  console.error("DISCORD_TOKEN is not set in environment variables!");
+  process.exit(1);
+}
 client.login(process.env.DISCORD_TOKEN);
 
+// --- Express API Setup ---
+const app = express();
+app.use(cors()); // allow cross-origin requests from any site
+
+// Pronouns endpoint
+app.get("/pronouns/:id", (req, res) => {
+  const id = req.params.id;
+  res.json({ pronouns: pronouns[id] || "Not set" });
+});
+
+// Listen on Render's dynamic PORT
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API running on port ${PORT}`));
