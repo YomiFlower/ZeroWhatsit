@@ -24,14 +24,20 @@ client.on("messageCreate", msg => {
 
 // Login the bot
 if (!process.env.DISCORD_TOKEN) {
-  console.error("DISCORD_TOKEN is not set in environment variables!");
+  console.error("DISCORD_TOKEN is not set!");
   process.exit(1);
 }
 client.login(process.env.DISCORD_TOKEN);
 
 // --- Express API Setup ---
 const app = express();
-app.use(cors()); // allow cross-origin requests from any site
+
+// CORS: allow any origin (works for testing). For production, replace '*' with your domain
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
 
 // Pronouns endpoint
 app.get("/pronouns/:id", (req, res) => {
@@ -39,6 +45,7 @@ app.get("/pronouns/:id", (req, res) => {
   res.json({ pronouns: pronouns[id] || "Not set" });
 });
 
-// Listen on Render's dynamic PORT
+// Dynamic port for Render
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API running on port ${PORT}`));
+
